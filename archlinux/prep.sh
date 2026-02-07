@@ -23,6 +23,8 @@ readonly ANSIBLE_ROLES_WORKSTATION=(
     "https://github.com/dvaliente-tekne/ansible-role-gpu"
     "https://github.com/dvaliente-tekne/ansible-role-gaming"
     "https://github.com/dvaliente-tekne/ansible-role-pipewire"
+    "https://github.com/dvaliente-tekne/ansible-role-hostname"
+    "https://github.com/dvaliente-tekne/ansible-role-bootstrap"
 )
 
 # F2FS constants
@@ -213,7 +215,9 @@ set_host_config() {
             ses=2
             kernel='linux-tkg-ntl'
             mcode='upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
-            # YUGEN has no WiFi - roles must be pre-downloaded or copied manually
+            # YUGEN has no WiFi - must use Ethernet or pre-download roles
+            # Try to download roles anyway (will work if Ethernet is connected)
+            download_ansible_roles
             ;;
         *)
             error "Unknown host: '$host'. Valid hosts: ${VALID_HOSTS[*]}"

@@ -42,23 +42,23 @@
         cacheable: true
 
   roles:
-    - role: ansible-role-os
-      tags: [os]
-
     - role: ansible-role-user
       tags: [user]
 
-    - role: ansible-role-gaming
-      tags: [gaming]
-
-    - role: ansible-role-gpu
-      tags: [gpu]
-
-    - role: ansible-role-onedrive
-      tags: [onedrive]
+    - role: ansible-role-os
+      tags: [os]
 
     - role: ansible-role-pipewire
       tags: [pipewire]
 
+    - role: ansible-role-gpu
+      tags: [gpu]
+
     - role: ansible-role-xfce4
       tags: [xfce4]
+
+    - role: ansible-role-gaming
+      tags: [gaming]
+
+    - role: ansible-role-onedrive
+      tags: [onedrive]

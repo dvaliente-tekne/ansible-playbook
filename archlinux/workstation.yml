@@ -1,0 +1,63 @@
+---
+# Workstation Playbook
+# Runs on ASTER and YUGEN hosts only
+#
+# Usage:
+#   ansible-playbook workstation.yml --ask-vault-pass
+#   ansible-playbook workstation.yml --vault-password-file=~/.vault_pass
+
+- name: Configure workstation
+  hosts: localhost
+  connection: local
+  become: true
+
+  vars_files:
+    - vault
+
+  pre_tasks:
+    - name: Read hostname from /etc/hostname
+      ansible.builtin.slurp:
+        src: /etc/hostname
+      register: hostname_file
+
+    - name: Set hostname fact
+      ansible.builtin.set_fact:
+        current_hostname: "{{ (hostname_file.content | b64decode).strip() | upper }}"
+
+    - name: Display detected hostname
+      ansible.builtin.debug:
+        msg: "Detected hostname: {{ current_hostname }}"
+
+    - name: Verify hostname is ASTER or YUGEN
+      ansible.builtin.assert:
+        that:
+          - current_hostname in ['ASTER', 'YUGEN']
+        fail_msg: "This playbook only runs on ASTER or YUGEN. Current hostname: {{ current_hostname }}"
+        success_msg: "Hostname verified: {{ current_hostname }}"
+
+    - name: Set cached_hostname for roles
+      ansible.builtin.set_fact:
+        cached_hostname: "{{ current_hostname }}"
+        cacheable: true
+
+  roles:
+    - role: ansible-role-user
+      tags: [user]
+
+    - role: ansible-role-os
+      tags: [os]
+
+    - role: ansible-role-gpu
+      tags: [gpu]
+
+    - role: ansible-role-pipewire
+      tags: [pipewire]
+
+    - role: ansible-role-xfce4
+      tags: [xfce4]
+
+    - role: ansible-role-gaming
+      tags: [gaming]
+
+    - role: ansible-role-onedrive
+      tags: [onedrive]

@@ -116,17 +116,17 @@ clone_or_update_role() {
     
     if [[ -d "$target_dir" ]]; then
         log "Role '$repo_name' already exists, pulling latest..."
-        if git -C "$target_dir" pull --rebase -q 2>/dev/null; then
+        if git -C "$target_dir" pull --rebase -q; then
             log "Role '$repo_name' updated."
         else
-            log "WARNING: Failed to update '$repo_name'."
+            log "ERROR: Failed to update '$repo_name'. Check error above."
         fi
     else
-        log "Cloning '$repo_name'..."
-        if git clone -q "$repo_url" "$target_dir" 2>/dev/null; then
+        log "Cloning '$repo_name' from $repo_url ..."
+        if git clone "$repo_url" "$target_dir"; then
             log "Role '$repo_name' cloned successfully."
         else
-            log "WARNING: Failed to clone '$repo_name'."
+            log "ERROR: Failed to clone '$repo_name'. Check error above."
         fi
     fi
 }

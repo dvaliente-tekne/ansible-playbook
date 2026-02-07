@@ -100,11 +100,25 @@ connect_wifi() {
     log "TRYING TO CONNECT TO WIFI..."
     if /usr/bin/iwctl station wlan0 connect esher; then
         log "WiFi connection initiated."
-        # Wait for network to stabilize
-        sleep 3
     else
         log "WARNING: WiFi connection may have failed."
     fi
+}
+
+wait_for_network() {
+    local max_attempts="${1:-30}"
+    local attempt=0
+
+    log "Waiting for network connectivity..."
+    while (( attempt < max_attempts )); do
+        if ping -c 1 -W 2 archlinux.org &>/dev/null; then
+            log "Network is up."
+            return 0
+        fi
+        (( attempt++ ))
+        sleep 2
+    done
+    error "No network connectivity after $max_attempts attempts. Check your connection."
 }
 
 clone_or_update_role() {
@@ -133,6 +147,14 @@ clone_or_update_role() {
 
 download_ansible_roles() {
     log "Downloading Ansible roles from GitHub..."
+
+    # Ensure git is available before attempting to clone/pull repos
+    if ! command -v git &>/dev/null; then
+        log "git not found, installing..."
+        if ! pacman -Sy --noconfirm git; then
+            error "Failed to install git. Cannot download Ansible roles."
+        fi
+    fi
     
     local roles_dir="${SCRIPT_DIR}/roles"
     mkdir -p "$roles_dir"
@@ -180,6 +202,7 @@ set_host_config() {
             kernel='linux-tkg-alk'
             mcode='sof-firmware laptop-mode-tools-git upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
             connect_wifi
+            wait_for_network
             download_ansible_roles
             ;;
         THEMIS)
@@ -192,6 +215,7 @@ set_host_config() {
             kernel='linux'
             mcode=''
             connect_wifi
+            wait_for_network
             download_ansible_roles
             ;;
         HEPHAESTUS)
@@ -204,6 +228,7 @@ set_host_config() {
             kernel='linux-tkg-ntl'
             mcode='upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
             connect_wifi
+            wait_for_network
             download_ansible_roles
             ;;
         YUGEN)
@@ -215,8 +240,8 @@ set_host_config() {
             ses=2
             kernel='linux-tkg-ntl'
             mcode='upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
-            # YUGEN has no WiFi - must use Ethernet or pre-download roles
-            # Try to download roles anyway (will work if Ethernet is connected)
+            # YUGEN has no WiFi - requires Ethernet
+            wait_for_network
             download_ansible_roles
             ;;
         *)
@@ -462,8 +487,8 @@ locale-gen
 echo 'LANG=en_US.UTF-8' > /etc/locale.conf
 echo 'KEYMAP=us' > /etc/vconsole.conf
 
-# EFI boot entry
-/usr/bin/efibootmgr -B -b 0
+# EFI boot entry (remove old entry if it exists)
+/usr/bin/efibootmgr -B -b 0 2>/dev/null || true
 
 /usr/bin/efibootmgr \
     --disk ${boot_disk} \
@@ -495,6 +520,9 @@ post_start() {
 
     post_pacmanconf
 
+    # Re-check internet before downloading packages
+    wait_for_network
+
     log "Synchronizing package databases..."
     pacman -Syy
 
@@ -503,7 +531,7 @@ post_start() {
         intel-ucode $mcode $kernel "${kernel}-headers" \
         linux-firmware linux-firmware-broadcom linux-firmware-liquidio linux-firmware-mellanox \
         linux-firmware-nfp linux-firmware-qlogic \
-        dosfstools f2fs-tools dosfstools exfatprogs exfat-utils \
+        dosfstools f2fs-tools exfatprogs exfat-utils \
         ansible-core ansible-lint ansible \
         python python-pip python-pipx python-passlib \
         vim vim-vital vim-tagbar vim-tabular vim-syntastic vim-supertab vim-spell-es vim-spell-en \

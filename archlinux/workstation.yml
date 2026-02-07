@@ -35,29 +35,30 @@
         fail_msg: "This playbook only runs on ASTER or YUGEN. Current hostname: {{ current_hostname }}"
         success_msg: "Hostname verified: {{ current_hostname }}"
 
-    - name: Set cached_hostname for roles
+    - name: Set hostname variables for roles
       ansible.builtin.set_fact:
         cached_hostname: "{{ current_hostname }}"
+        hostname: "{{ current_hostname }}"
         cacheable: true
 
   roles:
-    - role: ansible-role-user
-      tags: [user]
-
     - role: ansible-role-os
       tags: [os]
 
+    - role: ansible-role-user
+      tags: [user]
+
+    - role: ansible-role-gaming
+      tags: [gaming]
+
     - role: ansible-role-gpu
       tags: [gpu]
+
+    - role: ansible-role-onedrive
+      tags: [onedrive]
 
     - role: ansible-role-pipewire
       tags: [pipewire]
 
     - role: ansible-role-xfce4
       tags: [xfce4]
-
-    - role: ansible-role-gaming
-      tags: [gaming]
-
-    - role: ansible-role-onedrive
-      tags: [onedrive]

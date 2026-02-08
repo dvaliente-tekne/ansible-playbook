@@ -111,7 +111,7 @@ wait_for_network() {
 
     log "Waiting for network connectivity..."
     while (( attempt < max_attempts )); do
-        if ping -c 1 -W 2 archlinux.org &>/dev/null; then
+        if ping -c 1 -W 2 1.1.1.1 &>/dev/null; then
             log "Network is up."
             return 0
         fi
@@ -130,18 +130,16 @@ clone_or_update_role() {
     
     if [[ -d "$target_dir" ]]; then
         log "Role '$repo_name' already exists, pulling latest..."
-        if git -C "$target_dir" pull --rebase -q; then
-            log "Role '$repo_name' updated."
-        else
-            log "ERROR: Failed to update '$repo_name'. Check error above."
+        if ! git -C "$target_dir" pull --rebase -q; then
+            error "Failed to update '$repo_name'. Cannot continue without roles."
         fi
+        log "Role '$repo_name' updated."
     else
         log "Cloning '$repo_name' from $repo_url ..."
-        if git clone "$repo_url" "$target_dir"; then
-            log "Role '$repo_name' cloned successfully."
-        else
-            log "ERROR: Failed to clone '$repo_name'. Check error above."
+        if ! git clone "$repo_url" "$target_dir"; then
+            error "Failed to clone '$repo_name'. Cannot continue without roles."
         fi
+        log "Role '$repo_name' cloned successfully."
     fi
 }
 
@@ -203,6 +201,7 @@ set_host_config() {
             mcode='sof-firmware laptop-mode-tools-git upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
             connect_wifi
             wait_for_network
+            post_pacmanconf
             download_ansible_roles
             ;;
         THEMIS)
@@ -216,6 +215,7 @@ set_host_config() {
             mcode=''
             connect_wifi
             wait_for_network
+            post_pacmanconf
             download_ansible_roles
             ;;
         HEPHAESTUS)
@@ -229,6 +229,7 @@ set_host_config() {
             mcode='upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
             connect_wifi
             wait_for_network
+            post_pacmanconf
             download_ansible_roles
             ;;
         YUGEN)
@@ -242,6 +243,7 @@ set_host_config() {
             mcode='upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
             # YUGEN has no WiFi - requires Ethernet
             wait_for_network
+            post_pacmanconf
             download_ansible_roles
             ;;
         *)
@@ -466,7 +468,11 @@ post_mount() {
 
 post_chroot_config() {
     log "Configuring system inside chroot..."
-    
+
+    # Ensure chroot uses our pacman.conf (mirrorlist, [themis], etc.)
+    cp /etc/pacman.conf /mnt/etc/pacman.conf
+    chown root:users /mnt/etc/pacman.conf
+
     # Determine boot disk based on host
     local boot_disk
     case "$host" in

@@ -515,13 +515,15 @@ CHROOT_EOF
 post_start() {
     log "Starting system installation..."
     
-    /usr/bin/timedatectl set-ntp true
     sed -i 's|#en_US.UTF-8 UTF-8|en_US.UTF-8 UTF-8|g' /etc/locale.gen
 
     post_pacmanconf
 
     # Re-check internet before downloading packages
     wait_for_network
+    
+    # Set NTP after network is confirmed up
+    /usr/bin/timedatectl set-ntp true
 
     log "Synchronizing package databases..."
     pacman -Syy

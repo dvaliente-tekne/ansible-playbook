@@ -513,19 +513,10 @@ CHROOT_EOF
     # Run ansible-role-user and ansible-role-xfce4 for ASTER and YUGEN
     if [[ "$host" == "ASTER" || "$host" == "YUGEN" ]]; then
         log "Running ansible-role-user and ansible-role-xfce4 for $host..."
-        local prep_ansible="/mnt/tmp/prep-ansible"
-        mkdir -p "${prep_ansible}/roles"
-        cp "${SCRIPT_DIR}/chroot.yml" "${prep_ansible}/"
-        cp "${SCRIPT_DIR}/inventory.yml" "${prep_ansible}/"
-        cp "${SCRIPT_DIR}/vault" "${prep_ansible}/"
-        cp -r "${SCRIPT_DIR}/roles/ansible-role-user" "${prep_ansible}/roles/"
-        cp -r "${SCRIPT_DIR}/roles/ansible-role-xfce4" "${prep_ansible}/roles/"
         # Minimal ansible.cfg so roles_path and inventory work inside chroot (paths are chroot-relative)
-        printf '%s\n' '[defaults]' 'roles_path = /tmp/prep-ansible/roles' 'inventory = /tmp/prep-ansible/inventory.yml' > "${prep_ansible}/ansible.cfg"
         log "Installing Ansible community.general collection in chroot (required by ansible-role-xfce4)..."
         arch-chroot /mnt ansible-galaxy collection install community.general --force
-        arch-chroot /mnt env ANSIBLE_CONFIG=/tmp/prep-ansible/ansible.cfg ansible-playbook /tmp/prep-ansible/chroot.yml -i /tmp/prep-ansible/inventory.yml --ask-vault-pass
-        rm -rf "${prep_ansible}"
+        arch-chroot /mnt bash /media/ansible-playbook/archlinux/chroot.sh
         log "Ansible roles user and xfce4 completed for $host."
     fi
 

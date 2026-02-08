@@ -84,8 +84,8 @@
     - role: ansible-role-gpu
       tags: [gpu]
 
-    # - role: ansible-role-xfce4
-    #  tags: [xfce4]
+    - role: ansible-role-xfce4
+      tags: [xfce4]
 
     - role: ansible-role-gaming
       tags: [gaming]

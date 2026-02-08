@@ -510,6 +510,113 @@ mkinitcpio -p ${kernel}
 echo "Automated chroot configuration complete."
 CHROOT_EOF
 
+    # XFCE4 configuration for ASTER and YUGEN only
+    if [[ "$host" == "ASTER" || "$host" == "YUGEN" ]]; then
+        log "Configuring XFCE4 for $host..."
+        
+        # Copy XFCE4 role files to chroot if they exist
+        local xfce4_files_dir="${SCRIPT_DIR}/roles/ansible-role-xfce4/files"
+        if [[ -d "$xfce4_files_dir" ]]; then
+            mkdir -p /mnt/tmp/xfce4-files
+            cp -r "$xfce4_files_dir"/* /mnt/tmp/xfce4-files/ 2>/dev/null || true
+        fi
+        
+        arch-chroot /mnt /bin/bash <<XFCE4_EOF
+set -euo pipefail
+
+HOST_NAME="${host}"
+
+# XFCE4 package groups
+pacman -Sy --noconfirm --needed xfce4 xfce4-goodies xorg-apps
+
+# XFCE4 packages
+pacman -Sy --noconfirm --needed \
+    xfce4-panel-profiles \
+    gnome-keyring \
+    seahorse \
+    libsecret \
+    xdg-desktop-portal \
+    xdg-desktop-portal-gtk \
+    xdg-desktop-portal-xapp \
+    xdg-desktop-portal-cosmic \
+    libportal \
+    libportal-gtk4 \
+    libportal-qt6 \
+    bibata-cursor-theme-bin \
+    flat-remix \
+    kora-icon-theme \
+    xorg-server \
+    xdotool \
+    bluez \
+    bluez-utils
+
+# Enable bluetooth service
+systemctl enable bluetooth.service
+
+# LightDM installation (ASTER only)
+if [[ "\${HOST_NAME}" == "ASTER" ]]; then
+    pacman -Sy --noconfirm --needed lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
+    systemctl enable lightdm.service
+    systemctl stop lightdm.service 2>/dev/null || true
+fi
+
+# User configuration (dvaliente and devops)
+for username in dvaliente devops; do
+    if id -u "\$username" &>/dev/null; then
+        user_home=\$(getent passwd "\$username" | cut -d: -f6)
+        user_group=\$(getent passwd "\$username" | cut -d: -f4)
+        
+        # Create directories
+        mkdir -p "\${user_home}/.config/xdg-desktop-portal"
+        mkdir -p "\${user_home}/.themes"
+        chown "\${username}:\${user_group}" "\${user_home}/.config/xdg-desktop-portal"
+        chown "\${username}:\${user_group}" "\${user_home}/.themes"
+        chmod 755 "\${user_home}/.config/xdg-desktop-portal"
+        chmod 755 "\${user_home}/.themes"
+        
+        # Extract theme if file exists
+        if [[ -f /tmp/xfce4-files/98942-minimal-grey2.tar ]]; then
+            if [[ ! -d "\${user_home}/.themes/Minimal-Grey2" ]]; then
+                tar -xf /tmp/xfce4-files/98942-minimal-grey2.tar -C "\${user_home}/.themes"
+                chown -R "\${username}:\${user_group}" "\${user_home}/.themes/Minimal-Grey2"
+            fi
+        fi
+        
+        # Copy xfce-portals.conf if it exists
+        if [[ -f /tmp/xfce4-files/xfce-portals.conf ]]; then
+            cp /tmp/xfce4-files/xfce-portals.conf "\${user_home}/.config/xdg-desktop-portal/xfce-portals.conf"
+            chown "\${username}:\${user_group}" "\${user_home}/.config/xdg-desktop-portal/xfce-portals.conf"
+            chmod 644 "\${user_home}/.config/xdg-desktop-portal/xfce-portals.conf"
+        fi
+    fi
+done
+
+# System configuration
+# Copy gnome-keyring.portal if it exists
+if [[ -f /tmp/xfce4-files/gnome-keyring.portal ]]; then
+    mkdir -p /usr/share/xdg-desktop-portal/portals
+    cp /tmp/xfce4-files/gnome-keyring.portal /usr/share/xdg-desktop-portal/portals/gnome-keyring.portal
+    chown root:root /usr/share/xdg-desktop-portal/portals/gnome-keyring.portal
+    chmod 644 /usr/share/xdg-desktop-portal/portals/gnome-keyring.portal
+fi
+
+# Copy ACPI handler script if it exists
+if [[ -f /tmp/xfce4-files/handler.sh ]]; then
+    mkdir -p /etc/acpi
+    cp /tmp/xfce4-files/handler.sh /etc/acpi/handler.sh
+    chown root:root /etc/acpi/handler.sh
+    chmod 755 /etc/acpi/handler.sh
+fi
+
+# Cleanup
+rm -rf /tmp/xfce4-files
+
+echo "XFCE4 configuration complete for \${HOST_NAME}."
+XFCE4_EOF
+        
+        log "XFCE4 configuration completed for $host."
+    fi
+
     log "Entering interactive chroot for password setup..."
     arch-chroot /mnt
 }

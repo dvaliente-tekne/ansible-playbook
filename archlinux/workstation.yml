@@ -36,6 +36,7 @@
     - name: Set hostname fact
       ansible.builtin.set_fact:
         current_hostname: "{{ (hostname_file.content | b64decode).strip() | upper }}"
+        current_hostname_raw: "{{ (hostname_file.content | b64decode).strip() }}"
 
     - name: Display detected hostname
       ansible.builtin.debug:
@@ -51,6 +52,7 @@
     - name: Set hostname variables for roles
       ansible.builtin.set_fact:
         cached_hostname: "{{ current_hostname }}"
+        cached_hostname_raw: "{{ current_hostname_raw }}"
         hostname: "{{ current_hostname }}"
         cacheable: true
 

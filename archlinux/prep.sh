@@ -315,7 +315,7 @@ EOF
     
     log "pacman.conf configured."
 
-/usr/bin/reflector --country 'United States' --latest 100 --sort rate --protocol 'https,ftp' --age 72 --save /etc/pacman.d/mirrorlist
+/usr/bin/reflector --country 'United States' --latest 100 --sort rate --protocol 'https,ftp' --age 168 --save /etc/pacman.d/mirrorlist
 }
 
 # ============================================================================

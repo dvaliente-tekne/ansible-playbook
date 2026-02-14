@@ -98,11 +98,20 @@ confirm_destructive() {
 
 connect_wifi() {
     log "TRYING TO CONNECT TO WIFI..."
-    if /usr/bin/iwctl station wlan0 connect esher; then
-        log "WiFi connection initiated."
-    else
-        log "WARNING: WiFi connection may have failed."
-    fi
+    local max_attempts=6
+    local attempt=1
+    while (( attempt <= max_attempts )); do
+        if /usr/bin/iwctl station wlan0 connect esher; then
+            log "WiFi connection initiated (attempt $attempt/$max_attempts)."
+            log "Waiting a few seconds for DHCP and routing..."
+            sleep 5
+            return 0
+        fi
+        log "WiFi attempt $attempt/$max_attempts failed, retrying in 5s..."
+        (( attempt++ ))
+        sleep 5
+    done
+    log "WARNING: WiFi connection failed after $max_attempts attempts. Continuing; wait_for_network may fail."
 }
 
 wait_for_network() {

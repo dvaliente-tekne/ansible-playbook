@@ -70,18 +70,21 @@ ansible-playbook workstation.yml --ask-vault-pass
 
 ## Playbooks
 
+See **../README.md** for full playbook documentation (pre-tasks, role order, tags, usage).
+
 ### workstation.yml
 
-Configures ASTER and YUGEN workstations with full desktop environment.
+Configures ASTER and YUGEN workstations with full desktop environment. Runs on `localhost`; hostname must be ASTER or YUGEN (enforced in pre_tasks).
 
 **Roles executed (in order):**
 1. `ansible-role-user` - Users, SSH keys, sudoers, dotfiles
 2. `ansible-role-os` - Locale, NTP, mirrors, network
-3. `ansible-role-gpu` - NVIDIA or Intel/Mesa drivers
-4. `ansible-role-pipewire` - Audio configuration
-5. `ansible-role-xfce4` - Desktop environment
-6. `ansible-role-gaming` - Steam, Lutris, Wine
-7. `ansible-role-onedrive` - OneDrive client
+3. `ansible-role-pipewire` - PipeWire audio configuration
+4. `ansible-role-gpu` - NVIDIA or Intel/Mesa drivers
+5. `ansible-role-xfce4` - XFCE4 desktop, LightDM (ASTER), bluetooth
+6. `ansible-role-gaming` - Steam, Lutris, Wine, gamemode
+7. `ansible-role-onedrive` - OneDrive client installation and setup
+8. `ansible-role-bootstrap` - OneDrive sync (interactive), symlinks, XFCE config
 
 **Usage:**
 ```bash

@@ -14,6 +14,13 @@ readonly VALID_HOSTS=("ASTER" "THEMIS" "HEPHAESTUS" "YUGEN")
 readonly ANSIBLE_ROLES_COMMON=(
     "https://github.com/dvaliente-tekne/ansible-role-os"
     "https://github.com/dvaliente-tekne/ansible-role-user"
+    "https://github.com/dvaliente-tekne/ansible-role-xfce4"
+    "https://github.com/dvaliente-tekne/ansible-role-onedrive"
+    "https://github.com/dvaliente-tekne/ansible-role-gpu"
+    "https://github.com/dvaliente-tekne/ansible-role-gaming"
+    "https://github.com/dvaliente-tekne/ansible-role-pipewire"
+    "https://github.com/dvaliente-tekne/ansible-role-hostname"
+    "https://github.com/dvaliente-tekne/ansible-role-bootstrap"
 )
 
 # Ansible roles for workstations (ASTER and YUGEN only)

@@ -11,7 +11,7 @@ ansible-playbook/
     ├── ansible.cfg     # Ansible config (inventory, roles path, fact cache)
     ├── inventory.yml   # Inventory (localhost for workstation)
     ├── vault           # Encrypted variables (ansible-vault)
-    ├── workstation.yml # Workstation playbook
+    ├── main.yml # Workstation playbook
     ├── prep.sh         # Live-ISO prep and base install
     ├── chroot.sh       # Chroot install helper
     ├── init.sh         # Optional init script
@@ -24,11 +24,11 @@ Roles are resolved from `./roles` (under `archlinux/`, populated by `prep.sh`) a
 
 ## Playbooks
 
-### archlinux/workstation.yml
+### archlinux/main.yml
 
 | Property | Value |
 |----------|--------|
-| **Path** | `archlinux/workstation.yml` |
+| **Path** | `archlinux/main.yml` |
 | **Purpose** | Full workstation configuration for Arch Linux (users, OS, audio, GPU, desktop, gaming, OneDrive, bootstrap). |
 | **Target hosts** | `localhost` (connection: local). |
 | **Allowed hostnames** | **ASTER** or **YUGEN** only (enforced in pre_tasks). |
@@ -67,19 +67,19 @@ From `ansible-playbook/archlinux/`:
 
 ```bash
 # Full run (vault password prompted)
-ansible-playbook workstation.yml --ask-vault-pass
+ansible-playbook main.yml --ask-vault-pass
 
 # Using a vault password file
-ansible-playbook workstation.yml --vault-password-file=~/.vault_pass
+ansible-playbook main.yml --vault-password-file=~/.vault_pass
 
 # Only specific roles (comma-separated tags)
-ansible-playbook workstation.yml --ask-vault-pass --tags "user,os,xfce4"
+ansible-playbook main.yml --ask-vault-pass --tags "user,os,xfce4"
 
 # Check mode (no changes)
-ansible-playbook workstation.yml --ask-vault-pass --check
+ansible-playbook main.yml --ask-vault-pass --check
 
 # Verbose
-ansible-playbook workstation.yml --ask-vault-pass -vv
+ansible-playbook main.yml --ask-vault-pass -vv
 ```
 
 #### Tags summary
@@ -103,7 +103,7 @@ ansible-playbook workstation.yml --ask-vault-pass -vv
 
    ```bash
    cd ansible-playbook/archlinux
-   ansible-playbook workstation.yml --ask-vault-pass
+   ansible-playbook main.yml --ask-vault-pass
    ```
 
 2. **Vault:** Playbooks that use `vars_files: [vault]` need a vault password via `--ask-vault-pass` or `--vault-password-file`.

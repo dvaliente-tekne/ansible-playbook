@@ -64,7 +64,7 @@ Arch Linux installation preparation script.
 
 Supported hosts:
     ASTER       - Laptop with single NVMe
-    THEMIS      - Server with dual NVMe  
+    THEMIS      - Server with dual NVMe + sda (BOOT/ROOT)  
     HEPHAESTUS  - Workstation with SDA + RAID
     YUGEN       - Workstation with triple NVMe
 
@@ -214,15 +214,14 @@ set_host_config() {
             download_ansible_roles
             ;;
         THEMIS)
-            arr_drives=('nvme0' 'nvme1')
-            arr_partitions=('nvme0n1' 'nvme1n1')
-            arr_mkfs=('nvme0n1p1' 'nvme0n1p2' 'nvme1n1p1')
-            arr_filesystems=('nvme0n1p2' 'nvme0n1p1' 'nvme1n1p1')
+            arr_drives=('nvme0' 'nvme1' 'sda')
+            arr_partitions=('nvme0n1' 'nvme1n1' 'sda')
+            arr_mkfs=('nvme0n1p1' 'nvme1n1p1' 'nvme1n1p2' 'sda1' 'sda2')
+            arr_filesystems=('sda2' 'sda1' 'nvme1n1p1' 'nvme1n1p2' 'nvme0n1p1')
             lbaf=0
             ses=1
             kernel='linux'
             mcode=''
-            connect_wifi
             wait_for_network
             post_pacmanconf
             download_ansible_roles
@@ -331,6 +330,7 @@ post_format() {
     confirm_destructive "FORMAT ALL NVME DRIVES"
 
     for drive in "${arr_drives[@]}"; do
+        [[ "$drive" == nvme* ]] || continue
         log "Formatting NVMe drive: /dev/$drive"
         if nvme format /dev/"$drive" --namespace-id=1 --lbaf="$lbaf" --ses="$ses" --ms=1 --reset --force; then
             partprobe
@@ -355,17 +355,28 @@ post_partition() {
         local parameters=""
         
         case "$partition" in
-            nvme0n1|sda)
-                parameters="mklabel gpt mkpart esp 0% 1% name 1 'BOOT' mkpart f2fs 1% 100% name 2 'ROOT' set 1 esp on p free"
+            nvme0n1)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    parameters="mklabel gpt mkpart xfs 0% 100% name 1 'libvirt-img' p free"
+                else
+                    parameters="mklabel gpt mkpart esp 0% 1% name 1 'BOOT' mkpart f2fs 1% 100% name 2 'ROOT' set 1 esp on p free"
+                fi
+                ;;
+            sda)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    parameters="mklabel gpt mkpart esp 0% 10% name 1 'BOOT' mkpart ext4 10% 100% name 2 'ROOT' set 1 esp on p free"
+                else
+                    parameters="mklabel gpt mkpart esp 0% 1% name 1 'BOOT' mkpart f2fs 1% 100% name 2 'ROOT' set 1 esp on p free"
+                fi
                 ;;
             nvme1n1)
-                local partition_name
                 if [[ "$host" == 'THEMIS' ]]; then
-                    partition_name='VAR'
+                    parameters="mklabel gpt mkpart xfs 0% 96% name 1 'docker' p free mkpart f2fs 96% 100% name 2 'code' p free"
                 else
+                    local partition_name
                     partition_name='HOME'
+                    parameters="mklabel gpt mkpart f2fs 1% 100% name 1 '$partition_name' p free"
                 fi
-                parameters="mklabel gpt mkpart f2fs 1% 100% name 1 '$partition_name' p free"
                 ;;
             nvme2n1|md126)
                 parameters="mklabel gpt mkpart f2fs 1% 100% name 1 'VAR' p free"
@@ -394,23 +405,48 @@ post_partition() {
     
     for filesystem in "${arr_mkfs[@]}"; do
         case "$filesystem" in
-            nvme0n1p1|sda1)
+            nvme0n1p1)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    log "Creating XFS filesystem (libvirt-img) on /dev/$filesystem..."
+                    /usr/bin/mkfs.xfs -f -m reflink=1,crc=1 -L 'libvirt-img' /dev/"$filesystem"
+                else
+                    log "Creating FAT32 filesystem on /dev/$filesystem..."
+                    /usr/bin/mkfs.vfat -F32 -n 'BOOT' /dev/"$filesystem"
+                fi
+                ;;
+            sda1)
                 log "Creating FAT32 filesystem on /dev/$filesystem..."
                 /usr/bin/mkfs.vfat -F32 -n 'BOOT' /dev/"$filesystem"
                 ;;
-            nvme0n1p2|sda2)
+            nvme0n1p2)
                 log "Creating F2FS filesystem (ROOT) on /dev/$filesystem..."
                 /usr/bin/mkfs.f2fs -l 'ROOT' -i -O "$F2FS_MKFS_OPTS" /dev/"$filesystem"
                 ;;
-            nvme1n1p1)
-                local filesystem_name
+            sda2)
                 if [[ "$host" == 'THEMIS' ]]; then
-                    filesystem_name='VAR'
+                    log "Creating ext4 filesystem (ROOT) on /dev/$filesystem..."
+                    /usr/bin/mkfs.ext4 -F -L 'ROOT' /dev/"$filesystem"
                 else
-                    filesystem_name='HOME'
+                    log "Creating F2FS filesystem (ROOT) on /dev/$filesystem..."
+                    /usr/bin/mkfs.f2fs -l 'ROOT' -i -O "$F2FS_MKFS_OPTS" /dev/"$filesystem"
                 fi
-                log "Creating F2FS filesystem ($filesystem_name) on /dev/$filesystem..."
-                /usr/bin/mkfs.f2fs -l "$filesystem_name" -i -O "$F2FS_MKFS_OPTS" /dev/"$filesystem"
+                ;;
+            nvme1n1p1)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    log "Creating XFS filesystem (docker) on /dev/$filesystem..."
+                    /usr/bin/mkfs.xfs -f -n ftype=1 -L 'docker' /dev/"$filesystem"
+                else
+                    log "Creating F2FS filesystem (HOME) on /dev/$filesystem..."
+                    /usr/bin/mkfs.f2fs -l 'HOME' -i -O "$F2FS_MKFS_OPTS" /dev/"$filesystem"
+                fi
+                ;;
+            nvme1n1p2)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    log "Creating F2FS filesystem (code) on /dev/$filesystem..."
+                    /usr/bin/mkfs.f2fs -l 'code' -i -O extra_attr,inode_checksum,sb_checksum,compression /dev/"$filesystem"
+                else
+                    error "FILESYSTEM FAILED: nvme1n1p2 only used on THEMIS"
+                fi
                 ;;
             nvme2n1p1|md126p1)
                 log "Creating F2FS filesystem (VAR) on /dev/$filesystem..."
@@ -440,24 +476,48 @@ post_mount() {
 
     for filesystem in "${arr_filesystems[@]}"; do
         case "$filesystem" in
-            nvme0n1p2|sda2)
+            nvme0n1p2)
                 log "Mounting ROOT filesystem: /dev/$filesystem -> /mnt"
                 /usr/bin/mount -o "$F2FS_MOUNT_OPTS" /dev/"$filesystem" /mnt
                 /usr/bin/mkdir -p /mnt/{boot,home,media,var}
                 ;;
-            nvme0n1p1|sda1)
+            sda2)
+                log "Mounting ROOT filesystem: /dev/$filesystem -> /mnt"
+                /usr/bin/mount -o noatime,lazytime,commit=120 /dev/"$filesystem" /mnt
+                /usr/bin/mkdir -p /mnt/{boot,home,media,var}
+                ;;
+            nvme0n1p1)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    log "Mounting libvirt images: /dev/$filesystem -> /mnt/var/lib/libvirt/images"
+                    /usr/bin/mkdir -p /mnt/var/lib/libvirt/images
+                    /usr/bin/mount -o noatime,nodiratime,attr2,inode64 /dev/"$filesystem" /mnt/var/lib/libvirt/images
+                else
+                    log "Mounting BOOT filesystem: /dev/$filesystem -> /mnt/boot"
+                    /usr/bin/mount /dev/"$filesystem" /mnt/boot
+                fi
+                ;;
+            sda1)
                 log "Mounting BOOT filesystem: /dev/$filesystem -> /mnt/boot"
-                /usr/bin/mount /dev/"$filesystem" /mnt/boot
+                /usr/bin/mount -o umask=0077 /dev/"$filesystem" /mnt/boot
                 ;;
             nvme1n1p1)
-                local folder
                 if [[ "$host" == 'THEMIS' ]]; then
-                    folder='var'
+                    log "Mounting docker: /dev/$filesystem -> /mnt/var/lib/docker"
+                    /usr/bin/mkdir -p /mnt/var/lib/docker
+                    /usr/bin/mount -o noatime,nodiratime,attr2,inode64 /dev/"$filesystem" /mnt/var/lib/docker
                 else
-                    folder='home'
+                    log "Mounting home filesystem: /dev/$filesystem -> /mnt/home"
+                    /usr/bin/mount -o "$F2FS_MOUNT_OPTS" /dev/"$filesystem" /mnt/home
                 fi
-                log "Mounting $folder filesystem: /dev/$filesystem -> /mnt/$folder"
-                /usr/bin/mount -o "$F2FS_MOUNT_OPTS" /dev/"$filesystem" /mnt/"$folder"
+                ;;
+            nvme1n1p2)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    log "Mounting code: /dev/$filesystem -> /mnt/srv/code"
+                    /usr/bin/mkdir -p /mnt/srv/code
+                    /usr/bin/mount -o noatime,lazytime,compress_algorithm=zstd:6,compress_chksum,atgc,gc_merge /dev/"$filesystem" /mnt/srv/code
+                else
+                    error "MOUNT FAILED: nvme1n1p2 only used on THEMIS"
+                fi
                 ;;
             nvme2n1p1|md126p1)
                 log "Mounting VAR filesystem: /dev/$filesystem -> /mnt/var"
@@ -487,8 +547,8 @@ post_chroot_config() {
     # Determine boot disk based on host
     local boot_disk
     case "$host" in
-        ASTER|THEMIS|YUGEN) boot_disk="/dev/nvme0n1" ;;
-        HEPHAESTUS) boot_disk="/dev/sda" ;;
+        ASTER|YUGEN) boot_disk="/dev/nvme0n1" ;;
+        THEMIS|HEPHAESTUS) boot_disk="/dev/sda" ;;
     esac
 
     arch-chroot /mnt /bin/bash <<CHROOT_EOF
@@ -569,7 +629,11 @@ post_start() {
         wireless-regdb rsync git wget reflector iptables-nft less usb_modeswitch libsecret gzip tar zlib xz \
         nvme-cli openssh openssl screen sudo gnupg bind cronie inetutils whois zip unzip p7zip sed fuse \
 	    mdadm jq curl make pkg-config dbus openbsd-netcat irqbalance schedtool schedtoold pikaur shfmt \
+<<<<<<< Updated upstream
         gsmartcontrol shellcheck bats
+=======
+        gsmartcontrol shellcheck bats cpupower
+>>>>>>> Stashed changes
 
     log "Generating fstab..."
     genfstab -U /mnt >> /mnt/etc/fstab

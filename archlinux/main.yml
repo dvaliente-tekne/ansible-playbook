@@ -3,8 +3,8 @@
 # Runs on ASTER and YUGEN hosts only
 #
 # Usage:
-#   ansible-playbook workstation.yml --ask-vault-pass
-#   ansible-playbook workstation.yml --vault-password-file=~/.vault_pass
+#   ansible-playbook main.yml --ask-vault-pass
+#   ansible-playbook main.yml --vault-password-file=~/.vault_pass
 #
 # Execution Flow:
 #   1. user      - Create users, SSH keys, shell configs
@@ -94,4 +94,13 @@
       tags: [onedrive]
 
     - role: ansible-role-bootstrap
+      tags: [bootstrap]
+
+    - role: ansible-role-docker
+      tags: [bootstrap]
+
+    - role: ansible-role-libvirt
+      tags: [bootstrap]
+
+    - role: ansible-role-nftables
       tags: [bootstrap]

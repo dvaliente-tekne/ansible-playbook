@@ -11,7 +11,7 @@ ansible/
 │       ├── ansible.cfg     # Ansible configuration
 │       ├── inventory.yml   # Localhost inventory
 │       ├── vault           # Encrypted secrets (passwords)
-│       ├── workstation.yml # Main workstation playbook
+│       ├── main.yml # Main playbook
 │       ├── prep.sh         # Installation preparation script
 │       └── roles/          # Downloaded roles (created by prep.sh)
 ├── roles/                  # Ansible roles (individual git repos)
@@ -65,14 +65,14 @@ After rebooting into the new system:
 cd /path/to/ansible-playbook/archlinux
 
 # Run the workstation playbook
-ansible-playbook workstation.yml --ask-vault-pass
+ansible-playbook main.yml --ask-vault-pass
 ```
 
 ## Playbooks
 
 See **../README.md** for full playbook documentation (pre-tasks, role order, tags, usage).
 
-### workstation.yml
+### main.yml
 
 Configures ASTER and YUGEN workstations with full desktop environment. Runs on `localhost`; hostname must be ASTER or YUGEN (enforced in pre_tasks).
 
@@ -89,16 +89,16 @@ Configures ASTER and YUGEN workstations with full desktop environment. Runs on `
 **Usage:**
 ```bash
 # Full run
-ansible-playbook workstation.yml --ask-vault-pass
+ansible-playbook main.yml --ask-vault-pass
 
 # Run specific roles
-ansible-playbook workstation.yml --ask-vault-pass --tags "user,os"
+ansible-playbook main.yml --ask-vault-pass --tags "user,os"
 
 # Dry run
-ansible-playbook workstation.yml --ask-vault-pass --check
+ansible-playbook main.yml --ask-vault-pass --check
 
 # Verbose output
-ansible-playbook workstation.yml --ask-vault-pass -vv
+ansible-playbook main.yml --ask-vault-pass -vv
 ```
 
 ## Roles

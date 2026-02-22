@@ -97,10 +97,10 @@
       tags: [bootstrap]
 
     - role: ansible-role-docker
-      tags: [bootstrap]
+      tags: [docker]
 
     - role: ansible-role-libvirt
-      tags: [bootstrap]
+      tags: [libvirt]
 
     - role: ansible-role-nftables
-      tags: [bootstrap]
+      tags: [nftables]

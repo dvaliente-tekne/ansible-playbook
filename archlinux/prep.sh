@@ -21,17 +21,15 @@ readonly ANSIBLE_ROLES_COMMON=(
     "https://github.com/dvaliente-tekne/ansible-role-pipewire"
     "https://github.com/dvaliente-tekne/ansible-role-hostname"
     "https://github.com/dvaliente-tekne/ansible-role-bootstrap"
+    "https://github.com/dvaliente-tekne/ansible-role-docker"
+    "https://github.com/dvaliente-tekne/ansible-role-haproxy"
+    "https://github.com/dvaliente-tekne/ansible-role-libvirt"
+    "https://github.com/dvaliente-tekne/ansible-role-nftables"
 )
 
 # Ansible roles for workstations (ASTER and YUGEN only)
 readonly ANSIBLE_ROLES_WORKSTATION=(
-    "https://github.com/dvaliente-tekne/ansible-role-xfce4"
-    "https://github.com/dvaliente-tekne/ansible-role-onedrive"
     "https://github.com/dvaliente-tekne/ansible-role-gpu"
-    "https://github.com/dvaliente-tekne/ansible-role-gaming"
-    "https://github.com/dvaliente-tekne/ansible-role-pipewire"
-    "https://github.com/dvaliente-tekne/ansible-role-hostname"
-    "https://github.com/dvaliente-tekne/ansible-role-bootstrap"
 )
 
 # F2FS constants

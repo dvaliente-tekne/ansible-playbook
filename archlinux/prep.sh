@@ -207,7 +207,7 @@ set_host_config() {
             lbaf=0
             ses=1
             kernel='linux-tkg-alk'
-            mcode='sof-firmware laptop-mode-tools-git upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
+            mcode='schedtoold pikaur sof-firmware laptop-mode-tools-git upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
             connect_wifi
             wait_for_network
             post_pacmanconf
@@ -234,7 +234,7 @@ set_host_config() {
             lbaf=0
             ses=1
             kernel='linux-tkg-ntl'
-            mcode='upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
+            mcode='schedtoold pikaur upd72020x-fw wd719x-firmware ast-firmware aic94xx-firmware blesh-git pikaur'
             connect_wifi
             wait_for_network
             post_pacmanconf
@@ -628,7 +628,7 @@ post_start() {
         mlocate bash-completion pkgfile efibootmgr acpi acpid iwd wpa_supplicant \
         wireless-regdb rsync git wget reflector iptables-nft less usb_modeswitch libsecret gzip tar zlib xz \
         nvme-cli openssh openssl screen sudo gnupg bind cronie inetutils whois zip unzip p7zip sed fuse \
-	    mdadm jq curl make pkg-config dbus openbsd-netcat irqbalance schedtool schedtoold pikaur shfmt \
+	    mdadm jq curl make pkg-config dbus openbsd-netcat irqbalance schedtool shfmt \
         gsmartcontrol shellcheck bats cpupower
 
     log "Generating fstab..."

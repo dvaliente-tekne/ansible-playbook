@@ -121,6 +121,7 @@ Secrets are stored in `vault` file encrypted with Ansible Vault.
 **Required variables:**
 - `user_password` - Default password for users (hashed)
 - `root_password` - Root password (optional)
+- `haproxy_ssl_pem` - (When using haproxy role on server) Full PEM content (cert + key) for tekne.sv TLS. Keep in vault; do not commit the PEM file.
 
 **Managing vault:**
 ```bash

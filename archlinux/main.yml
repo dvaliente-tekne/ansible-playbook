@@ -107,3 +107,6 @@
 
     - role: ansible-role-haproxy
       tags: [haproxy]
+
+    - role: ansible-role-repotekne
+      tags: [repotekne]

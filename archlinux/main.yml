@@ -104,3 +104,6 @@
 
     - role: ansible-role-nftables
       tags: [nftables]
+
+    - role: ansible-role-haproxy
+      tags: [haproxy]

@@ -12,19 +12,20 @@ readonly VALID_HOSTS=("ASTER" "THEMIS" "HEPHAESTUS" "YUGEN")
 
 # Ansible roles to download (common - all hosts)
 readonly ANSIBLE_ROLES_COMMON=(
-    "https://github.com/dvaliente-tekne/ansible-role-os"
-    "https://github.com/dvaliente-tekne/ansible-role-user"
-    "https://github.com/dvaliente-tekne/ansible-role-xfce4"
-    "https://github.com/dvaliente-tekne/ansible-role-onedrive"
-    "https://github.com/dvaliente-tekne/ansible-role-gpu"
-    "https://github.com/dvaliente-tekne/ansible-role-gaming"
-    "https://github.com/dvaliente-tekne/ansible-role-pipewire"
-    "https://github.com/dvaliente-tekne/ansible-role-hostname"
     "https://github.com/dvaliente-tekne/ansible-role-bootstrap"
     "https://github.com/dvaliente-tekne/ansible-role-docker"
+    "https://github.com/dvaliente-tekne/ansible-role-gaming"
+    "https://github.com/dvaliente-tekne/ansible-role-gpu"
     "https://github.com/dvaliente-tekne/ansible-role-haproxy"
+    "https://github.com/dvaliente-tekne/ansible-role-hostname"
     "https://github.com/dvaliente-tekne/ansible-role-libvirt"
     "https://github.com/dvaliente-tekne/ansible-role-nftables"
+    "https://github.com/dvaliente-tekne/ansible-role-onedrive"
+    "https://github.com/dvaliente-tekne/ansible-role-os"
+    "https://github.com/dvaliente-tekne/ansible-role-pipewire"
+    "https://github.com/dvaliente-tekne/ansible-role-repotekne"
+    "https://github.com/dvaliente-tekne/ansible-role-user"
+    "https://github.com/dvaliente-tekne/ansible-role-xfce4"
 )
 
 # Ansible roles for workstations (ASTER and YUGEN only)

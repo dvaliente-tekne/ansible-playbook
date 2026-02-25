@@ -635,7 +635,7 @@ post_start() {
         wireless-regdb rsync git wget reflector iptables-nft less usb_modeswitch libsecret gzip tar zlib xz \
         nvme-cli openssh openssl screen sudo gnupg bind cronie inetutils whois zip unzip p7zip sed fuse \
 	    mdadm jq curl make pkg-config dbus openbsd-netcat irqbalance schedtool shfmt \
-        gsmartcontrol shellcheck bats cpupower devtools fakechroot fakeroot tcpdump
+        gsmartcontrol shellcheck bats cpupower devtools fakechroot fakeroot tcpdump parted xfsprogs
 
     log "Generating fstab..."
     genfstab -U /mnt >> /mnt/etc/fstab

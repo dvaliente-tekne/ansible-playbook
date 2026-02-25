@@ -110,3 +110,6 @@
 
     - role: ansible-role-repotekne
       tags: [repotekne]
+
+    - role: ansible-role-gerbera
+      tags: [gerbera]

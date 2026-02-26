@@ -220,10 +220,10 @@ set_host_config() {
             download_ansible_roles
             ;;
         THEMIS)
-            arr_drives=('nvme0' 'nvme1' 'sda')
-            arr_partitions=('nvme0n1' 'nvme1n1' 'sda')
-            arr_mkfs=('nvme0n1p1' 'nvme1n1p1' 'nvme1n1p2' 'sda1' 'sda2')
-            arr_filesystems=('sda2' 'sda1' 'nvme1n1p1' 'nvme1n1p2' 'nvme0n1p1')
+            arr_drives=('nvme0' 'nvme1' 'sda' 'sdb')
+            arr_partitions=('nvme0n1' 'nvme1n1' 'sda' 'sdb')
+            arr_mkfs=('nvme0n1p1' 'nvme1n1p1' 'nvme1n1p2' 'sda1' 'sda2' 'sdb1')
+            arr_filesystems=('sda2' 'sda1' 'nvme1n1p1' 'nvme1n1p2' 'sdb1' 'nvme0n1p1')
             lbaf=0
             ses=1
             kernel='linux'
@@ -375,6 +375,13 @@ post_partition() {
                     parameters="mklabel gpt mkpart esp 0% 1% name 1 'BOOT' mkpart f2fs 1% 100% name 2 'ROOT' set 1 esp on p free"
                 fi
                 ;;
+            sdb)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    parameters="mklabel gpt mkpart primary xfs 0% 100% name 1 'GERBERA' p free"
+                else
+                    error "PARTITION FAILED: sdb only used on THEMIS"
+                fi
+                ;;
             nvme1n1)
                 if [[ "$host" == 'THEMIS' ]]; then
                     parameters="mklabel gpt mkpart xfs 0% 96% name 1 'docker' p free mkpart f2fs 96% 100% name 2 'code' p free"
@@ -454,6 +461,14 @@ post_partition() {
                     error "FILESYSTEM FAILED: nvme1n1p2 only used on THEMIS"
                 fi
                 ;;
+            sdb1)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    log "Creating XFS filesystem (GERBERA) on /dev/$filesystem..."
+                    /usr/bin/mkfs.xfs -f -L 'GERBERA' /dev/"$filesystem"
+                else
+                    error "FILESYSTEM FAILED: sdb1 only used on THEMIS"
+                fi
+                ;;
             nvme2n1p1|md126p1)
                 log "Creating F2FS filesystem (VAR) on /dev/$filesystem..."
                 /usr/bin/mkfs.f2fs -l 'VAR' -i -O "$F2FS_MKFS_OPTS" /dev/"$filesystem"
@@ -523,6 +538,15 @@ post_mount() {
                     /usr/bin/mount -o noatime,lazytime,compress_algorithm=zstd:6,compress_chksum,atgc,gc_merge /dev/"$filesystem" /mnt/srv/code
                 else
                     error "MOUNT FAILED: nvme1n1p2 only used on THEMIS"
+                fi
+                ;;
+            sdb1)
+                if [[ "$host" == 'THEMIS' ]]; then
+                    log "Mounting GERBERA: /dev/$filesystem -> /mnt/srv/docker/gerbera"
+                    /usr/bin/mkdir -p /mnt/srv/docker/gerbera
+                    /usr/bin/mount -o noatime,lazytime /dev/"$filesystem" /mnt/srv/docker/gerbera
+                else
+                    error "MOUNT FAILED: sdb1 only used on THEMIS"
                 fi
                 ;;
             nvme2n1p1|md126p1)
